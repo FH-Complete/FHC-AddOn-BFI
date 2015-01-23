@@ -17,7 +17,7 @@
  *
  * Authors: Andreas Oesterreicher <andreas.oesterreicher@technikum-wien.at>
  */
-require_once('../../ldap/vilesci/ldap.class.php');
+require_once(dirname(__FILE__).'/../../ldap/vilesci/ldap.class.php');
 
 /**
  * Prueft die Passwort Policy
