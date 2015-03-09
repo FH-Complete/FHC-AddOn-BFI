@@ -103,6 +103,7 @@ function change_password($passwort_alt, $passwort_neu, $uid)
 {
 	// User DN holen
 	$ldap = new ldap();
+	$ldap->connect();
 	$user_dn = $ldap->GetUserDN($uid);
 
 	$oldpw64 = base64_encode(mb_convert_encoding('"'.$passwort_alt.'"', "UTF-16LE", "UTF-8"));
