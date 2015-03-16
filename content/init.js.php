@@ -26,6 +26,17 @@ addon.push(
 {
 	init: function() 
 	{		
+		// Menuepunkt fuer Laufzettel hinzufuegen
+		dokumentemenue = document.getElementById("menu-dokumente-popup");
+		var menuseparator = document.createElement("menuseparator");
+		dokumentemenue.appendChild(menuseparator);
+
+		var menuentry = document.createElement("menuitem");
+		menuentry.setAttribute("id","addons-bfi-dokumente-laufzettel");
+		menuentry.setAttribute("label","Laufzettel");
+		menuentry.addEventListener("command",AddonBFIDokumenteLaufzettel, true);
+	
+		dokumentemenue.appendChild(menuentry);
 	},
 	selectMitarbeiter: function(person_id, mitarbeiter_uid)
 	{
@@ -44,7 +55,7 @@ addon.push(
 	}
 });
 
-function AddonFHBDokumenteErfolgsnachweis()
+function AddonBFIDokumenteLaufzettel(event)
 {
 	netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
@@ -61,13 +72,10 @@ function AddonFHBDokumenteErfolgsnachweis()
   		tree.view.selection.getRangeAt(t,start,end);
 		for (var v = start.value; v <= end.value; v++)
 		{			
-			var uid = getTreeCellText(tree, 'student-treecol-uid', v);
-			paramList += ';'+uid;
+			var prestudent_id = getTreeCellText(tree, 'student-treecol-prestudent_id', v);
+			paramList += ';'+prestudent_id;
 		}
 	}
-	//Studiensemester holen
-	var ss = getStudiensemester();
-	var xsl_stg_kz = document.getElementById('student-prestudent-menulist-studiengang_kz').value
 	
 	if(paramList.replace(";",'')=='')
 	{
@@ -75,6 +83,23 @@ function AddonFHBDokumenteErfolgsnachweis()
 		return false;
 	}
 	
+	var output = 'pdf';
+	if(typeof(event)!=='undefined')
+	{
+		if (event.shiftKey) 
+		{
+		    var output = 'odt';
+		} 
+		else if (event.ctrlKey)
+		{
+			var output = 'doc';
+		}
+		else
+		{
+			var output = 'pdf';
+		}
+	}
+	
 	//PDF erzeugen
-	window.open('<?php echo APP_ROOT; ?>content/pdfExport.php?xml=erfolgsnachweis.rdf.php&xsl=Erfolgsnachweis&style_xsl=ErfolgsnwHead&uid='+paramList+'&ss='+ss+'&xsl_stg_kz='+xsl_stg_kz+'&output=pdf','Erfolgsnachweis', 'height=200,width=350,left=0,top=0,hotkeys=0,resizable=yes,status=no,scrollbars=yes,toolbar=no,location=no,menubar=no,dependent=yes');
+	window.open('<?php echo APP_ROOT; ?>content/pdfExport.php?xml=laufzettel.xml.php&xsl=Laufzettel&prestudent_id='+paramList+'&output='+output,'Laufzettel', 'height=200,width=350,left=0,top=0,hotkeys=0,resizable=yes,status=no,scrollbars=yes,toolbar=no,location=no,menubar=no,dependent=yes');
 }
