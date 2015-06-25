@@ -29,6 +29,17 @@ require_once('../../ldap/vilesci/ldap.class.php');
 require_once('../../../include/mail.class.php');
 require_once('../../../include/datum.class.php');
 
+// Wenn das Script nicht ueber Commandline gestartet wird, muss eine
+// Authentifizierung stattfinden
+if(php_sapi_name() != 'cli')
+{
+	$uid = get_uid();
+	$rechte = new benutzerberechtigung();
+	$rechte->getBerechtigungen($uid);
+	if(!$rechte->isBerechtigt('admin'))
+		die('Sie haben keine Berechtigung fuer diese Seite');
+}
+
 $p = new phrasen(DEFAULT_LANGUAGE);
 ini_set('display_errors','1');
 error_reporting(E_ALL);
@@ -82,20 +93,22 @@ if($result = $db->db_query($qry))
 		{
 			if($row->matrikelnr=='')
 			{
+				$cn = $row->nachname.' '.$row->vorname.' ('.$row->uid.')';
 				//Mitarbeiter
-				$dn = "CN=$row->nachname $row->vorname ($row->uid),OU=lehre,ou=benutzer,DC=fh-vie,DC=ac,DC=at";
+				$dn = 'CN='.$cn.',OU=Lehre,OU=Benutzer,DC=fh-vie,DC=ac,DC=at';
 			}
 			else
 			{
+				$cn = $row->nachname.' '.$row->vorname.' ('.$row->uid.')';
 				//Studierende
-				$dn = "CN=$row->nachname $row->vorname ($row->uid),OU=lehre,ou=benutzer,DC=fh-vie,DC=ac,dc=at";
+				$dn = 'CN='.$cn.',OU=Lehre,OU=Benutzer,DC=fh-vie,DC=ac,DC=at';
 			}
 			
 			//Active Directory will das Passwort in doppelten Hochkomma und UTF16LE codiert
 			$utf16_passwort = 	mb_convert_encoding('"'.ACCOUNT_ACTIVATION_PASSWORD.'"', "UTF-16LE", "UTF-8");
 
 			$data = array();
-			$data['cn'] = $row->uid;
+			$data['cn'] = $cn;
 			$data['objectclass'] = array("top","person","organizationalPerson","user");
 			$data['sn'] = $row->nachname;
 			$data['givenName'] = $row->vorname;
@@ -104,6 +117,7 @@ if($result = $db->db_query($qry))
 			$data['mail'] = $row->uid.'@'.DOMAIN;
 			$data['sAMAccountName'] = $row->uid;
 			$data['userPrincipalName'] = $row->uid.'@'.DOMAIN;
+		
 			$data['profilePath'] = '\\\\file.fh-vie.ac.at\\p.schule$\\allgemein';
 			$data['birthdate'] = $datum_obj->formatDatum($row->gebdatum,'d.m.Y');
 /*
@@ -112,6 +126,7 @@ if($result = $db->db_query($qry))
 			else
 				$data['proxyAddresses']=array('smtp:'.$row->uid.'@'.DOMAIN, 'SMTP:'.$row->alias.'@'.DOMAIN);
 */
+
 			if($row->lektor=='t')
 			{
 				$data['title']='Lehrbeauftragte/r';
@@ -135,7 +150,7 @@ if($result = $db->db_query($qry))
 			// http://support.microsoft.com/kb/305144/en-us
 			//$data["UserAccountControl"] = "512";  
 			//$data["unicodepwd"] = $utf16_passwort;			
-
+			
 			if(!$ldap->Add($dn, $data))
 			{
 				echo "<br>Fehler beim Anlegen von $row->uid: ".$ldap->errormsg;
@@ -190,4 +205,5 @@ if($result = $db->db_query($qry))
 }
 
 $ldap->unbind();
+echo "Done";
 ?>
