@@ -28,20 +28,27 @@ function generateUID($stgkzl,$jahr, $stgtyp, $matrikelnummer)
 {
 	$db = new basis_db();
 	$uid = 'fhb'.date('y');
-	$qry="SELECT substring(uid,6) as lastid FROM public.tbl_benutzer WHERE uid like '".$db->db_escape($uid)."%' ORDER BY 1 desc LIMIT 1";
+	$qry="
+	SELECT 
+		lpad(id::text,4,'0') as freeid
+	FROM 
+		generate_series(1,9999) as s(id)
+	WHERE
+		lpad(id::text,4,'0') not in(SELECT substring(uid,6) as ids FROM public.tbl_benutzer WHERE uid like 'fhb15%') limit 1
+	";
 	$lastid=0;
 	if($result = $db->db_query($qry))
 	{
 		if($row = $db->db_fetch_object($result))
 		{
-			$lastid = $row->lastid;
+			$freeid = $row->freeid;
 		}
 	}
 	else
 	{
 		die('Fehler beim Generieren der UID');
 	}
-	$uid.= sprintf('%04s',($lastid+1));
+	$uid.= sprintf('%04s',($freeid));
 	return $uid;
 }
 
