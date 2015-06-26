@@ -192,8 +192,164 @@ $error_msg='';
 	}
 	else
 		$error_msg.=$db->db_last_error();
+
+
+	// ******* Papercut ************ Alle Studenten und alle Mitarbeiter
+    flush();
+	$mlist = 'papercut';
+    setGeneriert($mlist);
+    echo '<br>'.$mlist.' wird abgeglichen!<br>';
+
+	$sql_query="DELETE FROM public.tbl_benutzergruppe 
+				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")	
+				AND uid not in 
+					(
+					SELECT uid FROM public.tbl_benutzer
+				)";
+	if($result = $db->db_query($sql_query))
+		echo $db->db_affected_rows($result).' Eintraege entfernt<br>';
+	else
+		$error_msg.=$db->db_last_error();
 	
+	// Studenten holen die nicht im Verteiler sind
+	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon) 
+				SELECT uid,UPPER('".$mlist."'),now(),'mlists_generate' 
+				FROM public.tbl_benutzer
+				WHERE uid NOT in(SELECT uid FROM public.tbl_benutzergruppe 
+								WHERE UPPER(gruppe_kurzbz)=UPPER('".$mlist."'))";
+	if($result = $db->db_query($sql_query))
+		echo $db->db_affected_rows($result).' Eintraege hinzugefuegt<br>';
+	else
+		$error_msg.=$db->db_last_error();
 	
+
+	// ******* WLAN ************ Studenten und lektoren
+    flush();
+	$mlist = 'wlan-access';
+    setGeneriert($mlist);
+    echo '<br>'.$mlist.' wird abgeglichen!<br>';
+
+	$sql_query="DELETE FROM public.tbl_benutzergruppe 
+				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")	
+				AND uid not in 
+					(
+					SELECT mitarbeiter_uid FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid) WHERE NOT fixangestellt AND lektor AND aktiv
+					UNION
+					SELECT student_uid FROM public.tbl_student JOIN public.tbl_benutzer ON(uid=student_uid) WHERE aktiv AND get_rolle_prestudent(prestudent_id, null) in('Student','Incoming','Diplomand')
+				)";
+	if($result = $db->db_query($sql_query))
+		echo $db->db_affected_rows($result).' Eintraege entfernt<br>';
+	else
+		$error_msg.=$db->db_last_error();
+	
+	// Personen holen die nicht im Verteiler sind
+	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon) 
+				SELECT uid,UPPER('".$mlist."'),now(),'mlists_generate' 
+				FROM 
+					(SELECT mitarbeiter_uid as uid FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid) WHERE NOT fixangestellt AND lektor AND aktiv
+					UNION
+					SELECT student_uid as uid FROM public.tbl_student JOIN public.tbl_benutzer on(uid=student_uid) WHERE aktiv AND get_rolle_prestudent(prestudent_id, null) in('Student','Incoming','Diplomand')
+					) as a
+				WHERE uid NOT in(SELECT uid FROM public.tbl_benutzergruppe 
+								WHERE UPPER(gruppe_kurzbz)=UPPER('".$mlist."'))";
+	if($result = $db->db_query($sql_query))
+		echo $db->db_affected_rows($result).' Eintraege hinzugefuegt<br>';
+	else
+		$error_msg.=$db->db_last_error();
+
+	// ******* VPN ************ Alle Studenten
+    flush();
+	$mlist = 'vpn-access';
+    setGeneriert($mlist);
+    echo '<br>'.$mlist.' wird abgeglichen!<br>';
+
+	$sql_query="DELETE FROM public.tbl_benutzergruppe 
+				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")	
+				AND uid not in 
+					(SELECT uid FROM campus.vw_student WHERE aktiv AND get_rolle_prestudent(vw_student.prestudent_id, null) IN ('Student','Incoming','Diplomand')
+				)";
+	if($result = $db->db_query($sql_query))
+		echo $db->db_affected_rows($result).' Eintraege entfernt<br>';
+	else
+		$error_msg.=$db->db_last_error();
+	
+	// Studenten holen die nicht im Verteiler sind
+	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon) 
+				SELECT uid,UPPER('".$mlist."'),now(),'mlists_generate' 
+				FROM campus.vw_student 
+				WHERE aktiv AND get_rolle_prestudent(vw_student.prestudent_id, null) IN ('Student','Incoming','Diplomand')
+				AND uid NOT in(SELECT uid FROM public.tbl_benutzergruppe 
+								WHERE UPPER(gruppe_kurzbz)=UPPER('".$mlist."'))";
+	if($result = $db->db_query($sql_query))
+		echo $db->db_affected_rows($result).' Eintraege hinzugefuegt<br>';
+	else
+		$error_msg.=$db->db_last_error();
+
+	// ******* lektoren ************
+    flush();
+	$mlist = 'lektoren';
+    setGeneriert($mlist);
+    echo '<br>'.$mlist.' wird abgeglichen!<br>';
+
+	$sql_query="DELETE FROM public.tbl_benutzergruppe 
+				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")	
+				AND uid not in 
+					(
+						SELECT mitarbeiter_uid 
+						FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid) 
+						WHERE NOT fixangestellt AND aktiv AND lektor
+				)";
+	if($result = $db->db_query($sql_query))
+		echo $db->db_affected_rows($result).' Eintraege entfernt<br>';
+	else
+		$error_msg.=$db->db_last_error();
+	
+	// lektoren holen die nicht im Verteiler sind
+	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon) 
+				SELECT mitarbeiter_uid,UPPER('".$mlist."'),now(),'mlists_generate' 
+				FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid) 
+				WHERE NOT fixangestellt AND aktiv AND lektor
+				AND mitarbeiter_uid NOT in(SELECT uid FROM public.tbl_benutzergruppe 
+								WHERE UPPER(gruppe_kurzbz)=UPPER('".$mlist."'))";
+	if($result = $db->db_query($sql_query))
+		echo $db->db_affected_rows($result).' Eintraege hinzugefuegt<br>';
+	else
+		$error_msg.=$db->db_last_error();
+
+	// ******* Absolventen ************
+    flush();
+	$mlist = 'absolventen';
+    setGeneriert($mlist);
+    echo '<br>'.$mlist.' wird abgeglichen!<br>';
+
+	$sql_query="DELETE FROM public.tbl_benutzergruppe 
+				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")	
+				AND uid not in 
+					(SELECT 
+						student_uid 
+					FROM 
+						public.tbl_student 
+					WHERE EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id AND status_kurzbz='Absolvent')					
+				)";
+	if($result = $db->db_query($sql_query))
+		echo $db->db_affected_rows($result).' Eintraege entfernt<br>';
+	else
+		$error_msg.=$db->db_last_error();
+	
+	// Absolventen holen die nicht im Verteiler sind
+	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon) 
+				SELECT student_uid,UPPER('".$mlist."'),now(),'mlists_generate' 
+				FROM 
+					public.tbl_student 
+				WHERE EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id AND status_kurzbz='Absolvent')
+				AND student_uid NOT in(SELECT uid FROM public.tbl_benutzergruppe 
+								WHERE UPPER(gruppe_kurzbz)=UPPER('".$mlist."'))";
+
+	if($result = $db->db_query($sql_query))
+		echo $db->db_affected_rows($result).' Eintraege hinzugefuegt<br>';
+	else
+		$error_msg.=$db->db_last_error();
+
 	echo $error_msg;
 	?>
 	<BR>
