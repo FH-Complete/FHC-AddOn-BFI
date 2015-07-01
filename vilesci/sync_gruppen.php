@@ -36,7 +36,7 @@ require_once('../../../include/functions.inc.php');
 require_once('../../../include/basis_db.class.php');
 require_once('../../ldap/vilesci/ldap.class.php');
 require_once('../../../include/studiensemester.class.php');
-
+require_once('../../../include/benutzerberechtigung.class.php');
 
 // Wenn das Script nicht ueber Commandline gestartet wird, muss eine
 // Authentifizierung stattfinden
@@ -63,15 +63,14 @@ $qry = "SELECT
 			AND aktiv=true
 			";
 
-//$qry.=" AND gruppe_kurzbz IN('TW_TEST','MITARBEITER','MUT-2UMS1','MUT-2UMS2')";
+//$qry.=" AND gruppe_kurzbz IN('STUDENTEN')";
 
 $ldap = new ldap();
 $ldap->connect();
 
 
 // Alle Gruppen und Member aus AD laden
-$gruppen = $ldap->getGroups(LDAP_BASE_DN,'objectClass=Group');
-
+$gruppen = $ldap->getGroups('dc=fh-vie,dc=ac,dc=at','objectClass=Group');
 $liste = array();
 
 foreach($gruppen as $row_gruppen)
@@ -79,10 +78,10 @@ foreach($gruppen as $row_gruppen)
 	// Alle Gruppen und zuteilten Member werden in ein Array gespeichert
 	if($row_gruppen['cn'][0]!='')
 	{
-		$name = $row_gruppen['cn'][0];
+		$name = mb_strtolower($row_gruppen['cn'][0]);
 		$liste[$name]['member']=array();
 		$liste[$name]['dn']=$row_gruppen['dn'];
-		$member = $ldap->getGroupMember($row_gruppen['cn'][0],LDAP_BASE_DN,'objectClass=Group');
+		$member = $ldap->getGroupMember($row_gruppen['cn'][0],'dc=fh-vie,dc=ac,dc=at','objectClass=Group');
 		if(isset($member[0]['member']))
 		{
 			foreach($member[0]['member'] as $key=>$row_member)
@@ -95,7 +94,8 @@ foreach($gruppen as $row_gruppen)
 		}
 	}
 }
-//var_dump($liste);
+//echo print_r($liste,true);
+echo '<br><br>';
 
 if($result = $db->db_query($qry))
 {
@@ -109,6 +109,7 @@ if($result = $db->db_query($qry))
 			GruppeAnlegen($row->gruppe_kurzbz, $row->gid);
 			$liste[$row->gruppe_kurzbz]=array();
 			$liste[$row->gruppe_kurzbz]['member']=array();
+			$liste[$row->gruppe_kurzbz]['dn']= "cn=".$row->gruppe_kurzbz.",ou=Lehre,ou=Benutzer,dc=fh-vie,dc=ac,dc=at";
 		}
 
 		// Teilnehmer der Gruppe Laden
@@ -125,31 +126,35 @@ if($result = $db->db_query($qry))
 
 				// Wenn Person nicht in der LDAP Gruppe ist
 				// dann hinzufuegen
-				if(!in_array('cn='.$row_member->uid.','.LDAP_BASE_DN, $liste[$row->gruppe_kurzbz]['member']))
+				$user_dn = $ldap->GetUserDn($row_member->uid);
+				if(!in_array($user_dn, $liste[$row->gruppe_kurzbz]['member']))
 				{
-					addMember($row_member->uid, $row->gruppe_kurzbz);
+					addMember($row_member->uid, $liste[$row->gruppe_kurzbz]['dn']);
 				}
-				$memberlist[]=$row_member->uid;
+				$memberlist[]=$user_dn;
 			}
 
 			// Alle Teilnehmer die im LDAP der Gruppe zugeteilt sind
 			// im FHComplete aber nicht, werden aus der Gruppe entfernt
 			$diff = array_diff($liste[$row->gruppe_kurzbz]['member'],$memberlist);
-			foreach($diff as $user)
+			foreach($diff as $userdn)
 			{
-				removeMember($user, $row->gruppe_kurzbz);
+				removeMember($userdn, $liste[$row->gruppe_kurzbz]['dn']);
 			}
 		}
 	}
 }
 
+
 // Lehrverbandsgruppen synchronisieren
 $qry = "SELECT uid, studiengang_kz, semester, verband, gruppe, lower(typ || kurzbz) as kuerzel 
 	FROM campus.vw_student JOIN public.tbl_studiengang USING(studiengang_kz) 
-	WHERE vw_student.aktiv AND tbl_studiengang.aktiv";
+	WHERE vw_student.aktiv AND tbl_studiengang.aktiv 
+	AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=vw_student.prestudent_id AND studiensemester_kurzbz=".$db->db_add_param($stsem).")
+	AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=vw_student.prestudent_id AND status_kurzbz='Abbrecher')
+	AND NOT (uid like 'fhb%' AND length(uid)>10)";
 
-
-//$qry.=" AND tbl_studiengang.studiengang_kz=578";
+//$qry.=" AND tbl_studiengang.studiengang_kz=389";
 
 if($result = $db->db_query($qry))
 {
@@ -188,7 +193,6 @@ if($result = $db->db_query($qry))
 			}
 		}
 	}
-
 	//var_dump($lvbgruppen);
 }
 foreach($lvbgruppen as $gruppe_kurzbz=>$row)
@@ -200,6 +204,7 @@ foreach($lvbgruppen as $gruppe_kurzbz=>$row)
 		GruppeAnlegen($gruppe_kurzbz, $row['gid']);
 		$liste[$gruppe_kurzbz]=array();
 		$liste[$gruppe_kurzbz]['member']=array();
+		$liste[$gruppe_kurzbz]['dn']= "cn=$gruppe_kurzbz,ou=Lehre,ou=Benutzer,dc=fh-vie,dc=ac,dc=at";
 	}
 
 	$memberlist=array();
@@ -209,19 +214,20 @@ foreach($lvbgruppen as $gruppe_kurzbz=>$row)
 		{
 			// Wenn Person nicht in der LDAP Gruppe ist
 			// dann hinzufuegen
-			if(!in_array('cn='.$row_member.','.LDAP_BASE_DN, $liste[$gruppe_kurzbz]['member']))
+			$user_dn = $ldap->GetUserDn($row_member);
+			if(!in_array($user_dn, $liste[$gruppe_kurzbz]['member']))
 			{
-				addMember($row_member, $gruppe_kurzbz);
+				addMember($row_member, $liste[$gruppe_kurzbz]['dn']);
 			}
-			$memberlist[]=$row_member;
+			$memberlist[]=$user_dn;
 		}
 	}
 	// Alle Teilnehmer die im LDAP der Gruppe zugeteilt sind
 	// im FHComplete aber nicht, werden aus der Gruppe entfernt
 	$diff = array_diff($liste[$gruppe_kurzbz]['member'],$memberlist);
-	foreach($diff as $user)
+	foreach($diff as $userdn)
 	{
-		removeMember($user, $gruppe_kurzbz);
+		removeMember($userdn, $liste[$gruppe_kurzbz]['dn']);
 	}
 }
 
@@ -278,8 +284,8 @@ function GruppeAnlegen($gruppe_kurzbz, $gid)
 	$data["groupType"]="2";
 	$data["sAMAccountName"]=$gruppe_kurzbz;
 
-	$dn = "cn=$gruppe_kurzbz,".LDAP_BASE_DN;
-
+	$dn = "cn=$gruppe_kurzbz,ou=Lehre,ou=Benutzer,dc=fh-vie,dc=ac,dc=at";
+echo "DN: ".$dn;
 	$ldap->Add($dn, $data);
 }
 
@@ -288,15 +294,19 @@ function GruppeAnlegen($gruppe_kurzbz, $gid)
  * @param $uid
  * @param $gruppe_kurzbz
  */
-function addMember($uid, $gruppe_kurzbz)
+function addMember($uid, $group_dn)
 {
 	global $ldap;
 
-	echo "<br> ADD MEMBER $uid to $gruppe_kurzbz";
+	echo "<br> ADD MEMBER $uid to $group_dn";
 
-	$group_dn = "cn=$gruppe_kurzbz,".LDAP_BASE_DN;
 	$user_dn = $ldap->GetUserDn($uid);
-
+	//echo "UserDN:".$user_dn;
+	if($user_dn=='')
+	{
+		echo "<br>SKIP User $uid - nicht im AD";
+		return false;
+	}
 	$data=array();
 	$data['member'][] = $user_dn;
 
@@ -310,20 +320,21 @@ function addMember($uid, $gruppe_kurzbz)
  * @param $uid
  * @param $gruppe_kurzbz
  */
-function removeMember($uid, $gruppe_kurzbz)
+function removeMember($user_dn, $group_dn)
 {
 	global $ldap;
 	
-	echo "<br> REMOVE MEMBER $uid from $gruppe_kurzbz";
-	$group_dn = "cn=$gruppe_kurzbz,".LDAP_BASE_DN;
+	// Alle die in cn=Users drinnen sind nicht rauswerfen
+	if(stristr($user_dn,'cn=Users'))
+		return;
 
-	$user_dn = $ldap->GetUserDn($uid);
+	echo "<br> REMOVE MEMBER $user_dn from $group_dn";
 
+/*
 	$data=array();
 	$data['member'][] = $user_dn;
 
 	ldap_mod_del ($ldap->ldap_conn, $group_dn, $data);
-
-	//$ldap->DeleteGroupMember($dn, $uid);
+*/
 }
 ?>

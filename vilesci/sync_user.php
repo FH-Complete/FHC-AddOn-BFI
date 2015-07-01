@@ -28,6 +28,7 @@ require_once('../../../include/phrasen.class.php');
 require_once('../../ldap/vilesci/ldap.class.php');
 require_once('../../../include/mail.class.php');
 require_once('../../../include/datum.class.php');
+require_once('../../../include/benutzerberechtigung.class.php');
 
 // Wenn das Script nicht ueber Commandline gestartet wird, muss eine
 // Authentifizierung stattfinden
@@ -76,10 +77,11 @@ $qry = "SELECT
 				AND NOT EXISTS(SELECT 1 FROM public.tbl_benutzergruppe WHERE uid=tbl_mitarbeiter.mitarbeiter_uid AND gruppe_kurzbz='KEIN_ACCOUNT'))
 			OR
 			EXISTS (SELECT 1 FROM public.tbl_student JOIN public.tbl_prestudentstatus USING(prestudent_id) 
-					WHERE tbl_student.student_uid=tbl_benutzer.uid AND get_rolle_prestudent(prestudent_id,null) in('Student','Incoming')
+					WHERE tbl_student.student_uid=tbl_benutzer.uid AND get_rolle_prestudent(prestudent_id,null) in('Student','Incoming') AND tbl_prestudentstatus.studiensemester_kurzbz in(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester where start>now())
 					)
 			)
-		";
+		AND length(uid)<10";
+
 if($uid!='')
 	$qry.=" AND uid=".$db->db_add_param($uid);
 
@@ -119,6 +121,13 @@ if($result = $db->db_query($qry))
 			$data['userPrincipalName'] = $row->uid.'@'.DOMAIN;
 		
 			$data['profilePath'] = '\\\\file.fh-vie.ac.at\\p.schule$\\allgemein';
+		
+			if($row->gebdatum=='')
+			{
+				echo "<br>Ueberspringe $row->nachname $row->vorname weil kein Geburtsdatum eingetragen ist";
+				continue;
+			}
+	
 			$data['birthdate'] = $datum_obj->formatDatum($row->gebdatum,'d.m.Y');
 /*
 			if($row->uid==$row->alias)
@@ -150,6 +159,7 @@ if($result = $db->db_query($qry))
 			// http://support.microsoft.com/kb/305144/en-us
 			//$data["UserAccountControl"] = "512";  
 			//$data["unicodepwd"] = $utf16_passwort;			
+//echo "<br>$cn";
 			
 			if(!$ldap->Add($dn, $data))
 			{
