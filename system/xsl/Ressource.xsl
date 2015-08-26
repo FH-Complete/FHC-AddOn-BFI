@@ -31,7 +31,7 @@ xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn
       <style:table-column-properties style:column-width="5.597cm"/>
     </style:style>
     <style:style style:name="Tabelle1.E" style:family="table-column">
-      <style:table-column-properties style:column-width="2.399cm"/>
+      <style:table-column-properties style:column-width="5.399cm"/>
     </style:style>
     <style:style style:name="Tabelle1.F" style:family="table-column">
       <style:table-column-properties style:column-width="3.406cm"/>
@@ -105,7 +105,6 @@ xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn
         <table:table-column table:style-name="Tabelle1.D"/>
         <table:table-column table:style-name="Tabelle1.E"/>
         <table:table-column table:style-name="Tabelle1.F"/>
-        <table:table-column table:style-name="Tabelle1.G"/>
         <table:table-row>
           <table:table-cell table:style-name="Tabelle1.A1" office:value-type="string">
             <text:p text:style-name="P6">von</text:p>
@@ -123,10 +122,7 @@ xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn
             <text:p text:style-name="P6">Ressource</text:p>
           </table:table-cell>
           <table:table-cell table:style-name="Tabelle1.A1" office:value-type="string">
-            <text:p text:style-name="P6">ausgeliefert von/um</text:p>
-          </table:table-cell>
-          <table:table-cell table:style-name="Tabelle1.A1" office:value-type="string">
-            <text:p text:style-name="P6">rückgeholt von/um</text:p>
+            <text:p text:style-name="P6">geliefert/retour</text:p>
           </table:table-cell>
         </table:table-row>
 
@@ -137,57 +133,60 @@ xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn
 </xsl:template>
 
 <xsl:template match="lehreinheit">
-		<xsl:apply-templates select="stunde"/>
         <table:table-row>
-          <table:table-cell table:style-name="Tabelle1.A4" office:value-type="string">
-            <text:p text:style-name="P5"/>
+          <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
+            <text:p text:style-name="P5"><xsl:value-of select="./stunde[1]/item/stunde_beginn"/></text:p>
           </table:table-cell>
-          <table:table-cell table:style-name="Tabelle1.A4" office:value-type="string">
-            <text:p text:style-name="P5"/>
+          <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
+            <text:p text:style-name="P5"><xsl:value-of select="./stunde[last()]/item/stunde_ende"/></text:p>
           </table:table-cell>
-          <table:table-cell table:style-name="Tabelle1.A4" office:value-type="string">
-            <text:p text:style-name="P6"/>
+          <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
+            <text:p text:style-name="P6"><xsl:value-of select="./stunde[1]/item/ort_kurzbz"/></text:p>
           </table:table-cell>
-          <table:table-cell table:style-name="Tabelle1.A4" office:value-type="string">
-            <text:p text:style-name="P5"/>
+          <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
+            <text:p text:style-name="P5"><xsl:value-of select="./stunde[1]/item[1]/lvbezeichnung"/></text:p>
+			<text:p text:style-name="P5">Studiengang: <xsl:value-of select="./stunde[1]/item[1]/studiengang_kurzbzlang"/></text:p>
           </table:table-cell>
-          <table:table-cell table:style-name="Tabelle1.A4" office:value-type="string">
-            <text:p text:style-name="P6"/>
+          <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
+		
+				<xsl:for-each select="stunde/item/beschreibung[not(.=../../preceding-sibling::*/item/beschreibung)]">
+					<xsl:if test="string(.)">
+						<text:p text:style-name="P6">
+						 <xsl:value-of select="."/>
+						</text:p>
+					</xsl:if>
+				</xsl:for-each>
+				<xsl:for-each select="stunde/item/anmerkung[not(.=../../preceding-sibling::*/item/anmerkung)]">
+					<xsl:if test="string(.)">
+						<text:p text:style-name="P5">
+						 <xsl:value-of select="."/>
+						</text:p>
+					</xsl:if>
+				</xsl:for-each>
+
           </table:table-cell>
-          <table:table-cell table:style-name="Tabelle1.A4" office:value-type="string">
-            <text:p text:style-name="P4"/>
-          </table:table-cell>
-          <table:table-cell table:style-name="Tabelle1.A4" office:value-type="string">
+          <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
             <text:p text:style-name="P4"/>
           </table:table-cell>
         </table:table-row>
-</xsl:template>
-<xsl:template match="stunde">
-		<xsl:apply-templates select="item"/>
-</xsl:template>
 
-<xsl:template match="item">
         <table:table-row>
-          <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
-            <text:p text:style-name="P5"><xsl:value-of select="stunde_beginn"/></text:p>
+          <table:table-cell table:style-name="Tabelle1.A4" office:value-type="string">
+            <text:p text:style-name="P5"/>
           </table:table-cell>
-          <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
-            <text:p text:style-name="P5"><xsl:value-of select="stunde_ende"/></text:p>
+          <table:table-cell table:style-name="Tabelle1.A4" office:value-type="string">
+            <text:p text:style-name="P5"/>
           </table:table-cell>
-          <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
-            <text:p text:style-name="P6"><xsl:value-of select="ort_kurzbz"/></text:p>
+          <table:table-cell table:style-name="Tabelle1.A4" office:value-type="string">
+            <text:p text:style-name="P6"/>
           </table:table-cell>
-          <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
-            <text:p text:style-name="P5"><xsl:value-of select="lvbezeichnung"/></text:p>
-			<text:p text:style-name="P5"><xsl:value-of select="anmerkung"/></text:p>
+          <table:table-cell table:style-name="Tabelle1.A4" office:value-type="string">
+            <text:p text:style-name="P5"/>
           </table:table-cell>
-          <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
-            <text:p text:style-name="P6"><xsl:value-of select="beschreibung"/></text:p>
+          <table:table-cell table:style-name="Tabelle1.A4" office:value-type="string">
+            <text:p text:style-name="P6"/>
           </table:table-cell>
-          <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
-            <text:p text:style-name="P4"/>
-          </table:table-cell>
-          <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
+          <table:table-cell table:style-name="Tabelle1.A4" office:value-type="string">
             <text:p text:style-name="P4"/>
           </table:table-cell>
         </table:table-row>

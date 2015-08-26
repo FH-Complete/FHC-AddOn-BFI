@@ -15,11 +15,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  *
- * Authors: Andreas Oesterreicher <andreas.oesterreicher@technikum-wien.at> 
+ * Authors: Andreas Oesterreicher <andreas.oesterreicher@technikum-wien.at>
  *
  */
 /**
- * Synct die Gruppen und Teilnehmer vom FH-Complete ins LDAP damit 
+ * Synct die Gruppen und Teilnehmer vom FH-Complete ins LDAP damit
  * daraus Mailverteiler erstellt werden koennen
  */
 /*
@@ -54,7 +54,7 @@ $stsem = $stsem_obj->getAktorNext();
 echo "Verwendetes Studiensemester:".$stsem;
 $db = new basis_db();
 
-$qry = "SELECT 
+$qry = "SELECT
 			lower(gruppe_kurzbz) as gruppe_kurzbz, gid
 		FROM
 			public.tbl_gruppe
@@ -113,7 +113,7 @@ if($result = $db->db_query($qry))
 		}
 
 		// Teilnehmer der Gruppe Laden
-		$qry = "SELECT uid FROM public.tbl_benutzergruppe 
+		$qry = "SELECT uid FROM public.tbl_benutzergruppe
 			WHERE lower(gruppe_kurzbz)=".$db->db_add_param($row->gruppe_kurzbz).
 			" AND (studiensemester_kurzbz is null OR studiensemester_kurzbz=".$db->db_add_param($stsem).")";
 
@@ -147,9 +147,9 @@ if($result = $db->db_query($qry))
 
 
 // Lehrverbandsgruppen synchronisieren
-$qry = "SELECT uid, studiengang_kz, semester, verband, gruppe, lower(typ || kurzbz) as kuerzel 
-	FROM campus.vw_student JOIN public.tbl_studiengang USING(studiengang_kz) 
-	WHERE vw_student.aktiv AND tbl_studiengang.aktiv 
+$qry = "SELECT uid, studiengang_kz, semester, verband, gruppe, lower(typ || kurzbz) as kuerzel
+	FROM campus.vw_student JOIN public.tbl_studiengang USING(studiengang_kz)
+	WHERE vw_student.aktiv AND tbl_studiengang.aktiv
 	AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=vw_student.prestudent_id AND studiensemester_kurzbz=".$db->db_add_param($stsem).")
 	AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=vw_student.prestudent_id AND status_kurzbz='Abbrecher')
 	AND NOT (uid like 'fhb%' AND length(uid)>10)";
@@ -189,7 +189,7 @@ if($result = $db->db_query($qry))
 					$lvbgruppen[$bezeichnung]=array();
 					$lvbgruppen[$bezeichnung]['gid']=getGID($row->studiengang_kz, $row->semester, $row->verband, $row->gruppe);
 				}
-				$lvbgruppen[$bezeichnung]['member'][]=$row->uid;			
+				$lvbgruppen[$bezeichnung]['member'][]=$row->uid;
 			}
 		}
 	}
@@ -242,7 +242,7 @@ function getGID($studiengang_kz, $semester, $verband='', $gruppe='')
 {
 	global $db;
 
-	$qry = "SELECT gid FROM public.tbl_lehrverband 
+	$qry = "SELECT gid FROM public.tbl_lehrverband
 		WHERE studiengang_kz=".$db->db_add_param($studiengang_kz).
 	" AND semester=".$db->db_add_param($semester);
 
@@ -275,7 +275,7 @@ function GruppeAnlegen($gruppe_kurzbz, $gid)
     $data['proxyAddresses']=array('SMTP:'.$gruppe_kurzbz.'@'.DOMAIN);
     $data['displayName'] = $gruppe_kurzbz;
     $data['mail'] = $gruppe_kurzbz.'@'.DOMAIN;
-    
+
 	/*
     $data["objectClass"] = array('top','posixGroup');
 	$data["gidnumber"]=(int)$gid;
@@ -310,7 +310,7 @@ function addMember($uid, $group_dn)
 	$data=array();
 	$data['member'][] = $user_dn;
 
-	ldap_mod_add ($ldap->ldap_conn, $group_dn, $data); 
+	ldap_mod_add ($ldap->ldap_conn, $group_dn, $data);
 
 	//$ldap->AddGroupMember($dn, $uid);
 }
@@ -323,18 +323,21 @@ function addMember($uid, $group_dn)
 function removeMember($user_dn, $group_dn)
 {
 	global $ldap;
-	
+
 	// Alle die in cn=Users drinnen sind nicht rauswerfen
 	if(stristr($user_dn,'cn=Users'))
 		return;
 
+	// Nur Leute in der Lehre ou werden automatisch aus Gruppen entfernt
+	if(!stristr($user_dn,'ou=Lehre'))
+		return;
+
 	echo "<br> REMOVE MEMBER $user_dn from $group_dn";
 
-/*
 	$data=array();
 	$data['member'][] = $user_dn;
 
 	ldap_mod_del ($ldap->ldap_conn, $group_dn, $data);
-*/
+
 }
 ?>

@@ -38,7 +38,7 @@ $error_msg='';
 	<h1>Gruppen abgleich</h1>
 	<?php
 	$db = new basis_db();
-	
+
    	// aktuelles Studiensemester ermitteln
 	$sql_query="SELECT studiensemester_kurzbz FROM public.vw_studiensemester ORDER BY delta LIMIT 1";
 	if(!($result = $db->db_query($sql_query)))
@@ -47,21 +47,21 @@ $error_msg='';
 		$studiensemester=$row->studiensemester_kurzbz;
 	else
 		$error_msg.= $db->db_last_error().$sql_query;
-	
+
 	$stsem_obj = new studiensemester();
-	
+
 	if(mb_substr($studiensemester,0,1)=='W')
 		$stsem2 = $stsem_obj->getPreviousFrom($studiensemester);
-	else 
+	else
 		$stsem2 = $stsem_obj->getNextFrom($studiensemester);
-	
+
 	function setGeneriert($gruppe)
 	{
 		$db = new basis_db();
 		$qry = "UPDATE public.tbl_gruppe SET generiert=true WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($gruppe).")";
 		$db->db_query($qry);
 	}
-	
+
    	// **************************************************************
 	// Mitarbeiter Verteiler abgleichen
 	$mlist_name='mitarbeiter';
@@ -69,12 +69,12 @@ $error_msg='';
 	// MitarbeiterInnen holen die nicht mehr in den Verteiler gehoeren
 	echo $mlist_name.' wird abgeglichen!<BR>';
 	flush();
-	$sql_query="SELECT uid FROM public.tbl_benutzergruppe 
-			WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist_name).") 
-			AND uid NOT IN (SELECT mitarbeiter_uid 
-					FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON (mitarbeiter_uid=uid) 
+	$sql_query="SELECT uid FROM public.tbl_benutzergruppe
+			WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist_name).")
+			AND uid NOT IN (SELECT mitarbeiter_uid
+					FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON (mitarbeiter_uid=uid)
 					WHERE aktiv AND personalnummer >=0)";
-	
+
 	if(!($result = $db->db_query($sql_query)))
 		$error_msg.=$db->db_last_error();
 
@@ -88,23 +88,23 @@ $error_msg='';
 	}
 	// MitarbeiterInnen holen die nicht im Verteiler sind
 	echo '<BR>';
-	$sql_query="SELECT mitarbeiter_uid AS uid 
-			FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON (mitarbeiter_uid=uid) 
-			WHERE aktiv AND personalnummer >=0 
-			AND mitarbeiter_uid NOT IN (SELECT uid FROM public.tbl_benutzergruppe 
+	$sql_query="SELECT mitarbeiter_uid AS uid
+			FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON (mitarbeiter_uid=uid)
+			WHERE aktiv AND personalnummer >=0
+			AND mitarbeiter_uid NOT IN (SELECT uid FROM public.tbl_benutzergruppe
 								WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist_name)."))";
 	if(!($result = $db->db_query($sql_query)))
 		$error_msg.= $db->db_last_error();
 	while($row = $db->db_fetch_object($result))
 	{
-     	$sql_query="INSERT INTO public.tbl_benutzergruppe(uid, gruppe_kurzbz, insertamum, insertvon) 
+     	$sql_query="INSERT INTO public.tbl_benutzergruppe(uid, gruppe_kurzbz, insertamum, insertvon)
 			VALUES (".$db->db_add_param($row->uid).",".$db->db_add_param(strtoupper($mlist_name)).", now(), 'mlists_generate')";
 		if(!$db->db_query($sql_query))
 			$error_msg.=$db->db_last_error().$sql_query;
 		echo '-';
 		flush();
 	}
-	
+
 	// **************************************************************
 	// Verteiler fuer alle externen Lektoren abgleichen
 	$mlist_name='lehrende_ext';
@@ -112,10 +112,10 @@ $error_msg='';
 	// Lektoren holen die nicht mehr in den Verteiler gehoeren
 	echo '<BR>'.$mlist_name.' wird abgeglichen!<BR>';
 	flush();
-	$sql_query="SELECT uid FROM public.tbl_benutzergruppe 
-			WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist_name).") 
-			AND uid NOT IN (SELECT mitarbeiter_uid 
-					FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid) 
+	$sql_query="SELECT uid FROM public.tbl_benutzergruppe
+			WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist_name).")
+			AND uid NOT IN (SELECT mitarbeiter_uid
+					FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid)
 					WHERE aktiv AND NOT fixangestellt AND lektor)";
 	if(!($result = $db->db_query($sql_query)))
 		$error_msg.=$db->db_last_error();
@@ -129,16 +129,16 @@ $error_msg='';
 	}
 	// Lektoren holen die nicht im Verteiler sind
 	echo '<BR>';
-	$sql_query="SELECT mitarbeiter_uid AS uid 
-			FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid) 
+	$sql_query="SELECT mitarbeiter_uid AS uid
+			FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid)
 			WHERE NOT fixangestellt AND lektor AND aktiv
-				AND mitarbeiter_uid NOT IN (SELECT uid FROM public.tbl_benutzergruppe 
+				AND mitarbeiter_uid NOT IN (SELECT uid FROM public.tbl_benutzergruppe
 					WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist_name)."))";
 	if(!($result = $db->db_query($sql_query)))
 		$error_msg.=$db->db_last_error();
 	while($row = $db->db_fetch_object($result))
 	{
-     	$sql_query="INSERT INTO public.tbl_benutzergruppe(uid, gruppe_kurzbz, insertamum, insertvon) 
+     	$sql_query="INSERT INTO public.tbl_benutzergruppe(uid, gruppe_kurzbz, insertamum, insertvon)
 			VALUES (".$db->db_add_param($row->uid).",".$db->db_add_param(strtoupper($mlist_name)).", now(), 'mlists_generate')";
 
 		if(!$db->db_query($sql_query))
@@ -156,21 +156,21 @@ $error_msg='';
 
     //Abbrecher bleiben noch 3 Wochen im Verteiler
     //andere inaktive noch fuer 20 Wochen
-    //damit im CIS die Menuepunkte fuer Studierende richtig angezeigt werden    
-	$sql_query="DELETE FROM public.tbl_benutzergruppe 
-				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")	
-				AND uid not in 
-					(SELECT uid FROM campus.vw_student 
-					WHERE 
-						aktiv 
-						AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus 
-									WHERE prestudent_id=vw_student.prestudent_id 
-										AND status_kurzbz in('Student','Incoming','Diplomand') 
-										AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now()-'10 months'::interval)
+    //damit im CIS die Menuepunkte fuer Studierende richtig angezeigt werden
+	$sql_query="DELETE FROM public.tbl_benutzergruppe
+				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")
+				AND uid not in
+					(SELECT uid FROM campus.vw_student
+					WHERE
+						aktiv
+						AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus
+									WHERE prestudent_id=vw_student.prestudent_id
+										AND status_kurzbz in('Student','Incoming','Diplomand')
+										AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now())
 							)
-						AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus 
-									WHERE prestudent_id=vw_student.prestudent_id 
-										AND status_kurzbz='Abbrecher' 
+						AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus
+									WHERE prestudent_id=vw_student.prestudent_id
+										AND status_kurzbz='Abbrecher'
 							)
 					AND NOT (uid like 'fhb%' AND length(uid)>10)
 				)";
@@ -182,24 +182,24 @@ $error_msg='';
 	{
 		$error_msg.=$db->db_last_error();
 	}
-	
+
 	// Studenten holen die nicht im Verteiler sind
-	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon) 
-				SELECT uid,UPPER('".$mlist."'),now(),'mlists_generate' 
-				FROM campus.vw_student 
-				WHERE (aktiv 
-						AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus 
-									WHERE prestudent_id=vw_student.prestudent_id 
-										AND status_kurzbz in('Student','Incoming','Diplomand') 
-										AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now()-'10 months'::interval)
+	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon)
+				SELECT uid,UPPER('".$mlist."'),now(),'mlists_generate'
+				FROM campus.vw_student
+				WHERE (aktiv
+						AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus
+									WHERE prestudent_id=vw_student.prestudent_id
+										AND status_kurzbz in('Student','Incoming','Diplomand')
+										AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now())
 							)
-						AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus 
+						AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus
 									WHERE prestudent_id=vw_student.prestudent_id 
-										AND status_kurzbz='Abbrecher' 
+										AND status_kurzbz='Abbrecher'
 							)
 					AND NOT (uid like 'fhb%' AND length(uid)>10)
 					)
-				AND uid NOT in(SELECT uid FROM public.tbl_benutzergruppe 
+				AND uid NOT in(SELECT uid FROM public.tbl_benutzergruppe
 								WHERE UPPER(gruppe_kurzbz)=UPPER('".$mlist."'))";
 	if($result = $db->db_query($sql_query))
 	{
@@ -215,20 +215,20 @@ $error_msg='';
     setGeneriert($mlist);
     echo '<br>'.$mlist.' wird abgeglichen!<br>';
 
-	$sql_query="DELETE FROM public.tbl_benutzergruppe 
-				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")	
-				AND uid not in 
+	$sql_query="DELETE FROM public.tbl_benutzergruppe
+				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")
+				AND uid not in
 					(
-					SELECT mitarbeiter_uid FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid) WHERE  aktiv   
+					SELECT mitarbeiter_uid FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid) WHERE  aktiv
 						AND NOT EXISTS (SELECT 1 FROM public.tbl_benutzergruppe WHERE uid=tbl_benutzer.uid AND gruppe_kurzbz='KEIN_ACCOUNT')
 					UNION
-					SELECT student_uid FROM public.tbl_student JOIN public.tbl_benutzer ON(uid=student_uid) 
-					WHERE aktiv AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id 
-												AND status_kurzbz in('Student','Diplomand','Incoming') 
-												AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now()-'10 months'::interval)
+					SELECT student_uid FROM public.tbl_student JOIN public.tbl_benutzer ON(uid=student_uid)
+					WHERE aktiv AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id
+												AND status_kurzbz in('Student','Diplomand','Incoming')
+												AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now())
 												)
-								AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id 
-												AND status_kurzbz='Abbrecher' 
+								AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id
+												AND status_kurzbz='Abbrecher'
 												)
 						AND NOT (uid like 'fhb%' AND length(uid)>10)
 
@@ -237,31 +237,31 @@ $error_msg='';
 		echo $db->db_affected_rows($result).' Eintraege entfernt<br>';
 	else
 		$error_msg.=$db->db_last_error();
-	
+
 	// Studenten holen die nicht im Verteiler sind
-	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon) 
-				SELECT uid,UPPER('".$mlist."'),now(),'mlists_generate' 
+	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon)
+				SELECT uid,UPPER('".$mlist."'),now(),'mlists_generate'
 				FROM public.tbl_benutzer WHERE uid in(
 					SELECT mitarbeiter_uid FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid) WHERE  aktiv
-						AND NOT EXISTS (SELECT 1 FROM public.tbl_benutzergruppe WHERE uid=tbl_benutzer.uid AND gruppe_kurzbz='KEIN_ACCOUNT')                                                                   
+						AND NOT EXISTS (SELECT 1 FROM public.tbl_benutzergruppe WHERE uid=tbl_benutzer.uid AND gruppe_kurzbz='KEIN_ACCOUNT')
                     UNION
-                    SELECT student_uid FROM public.tbl_student JOIN public.tbl_benutzer ON(uid=student_uid) WHERE aktiv AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id 
-												AND status_kurzbz in('Student','Diplomand','Incoming') 
-												AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now()-'10 months'::interval)
+                    SELECT student_uid FROM public.tbl_student JOIN public.tbl_benutzer ON(uid=student_uid) WHERE aktiv AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id
+												AND status_kurzbz in('Student','Diplomand','Incoming')
+												AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now())
 												)
-								AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id 
-												AND status_kurzbz='Abbrecher' 
+								AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id
+												AND status_kurzbz='Abbrecher'
 												)
 						AND NOT (uid like 'fhb%' AND length(uid)>10)
 
 				)
-				AND uid NOT in(SELECT uid FROM public.tbl_benutzergruppe 
+				AND uid NOT in(SELECT uid FROM public.tbl_benutzergruppe
 								WHERE UPPER(gruppe_kurzbz)=UPPER('".$mlist."'))";
 	if($result = $db->db_query($sql_query))
 		echo $db->db_affected_rows($result).' Eintraege hinzugefuegt<br>';
 	else
 		$error_msg.=$db->db_last_error();
-	
+
 
 	// ******* WLAN ************ Studenten und lektoren
     flush();
@@ -269,20 +269,20 @@ $error_msg='';
     setGeneriert($mlist);
     echo '<br>'.$mlist.' wird abgeglichen!<br>';
 
-	$sql_query="DELETE FROM public.tbl_benutzergruppe 
-				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")	
-				AND uid not in 
+	$sql_query="DELETE FROM public.tbl_benutzergruppe
+				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")
+				AND uid not in
 					(
 					SELECT mitarbeiter_uid FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid) WHERE aktiv
 						AND NOT EXISTS (SELECT 1 FROM public.tbl_benutzergruppe WHERE uid=tbl_benutzer.uid AND gruppe_kurzbz='KEIN_ACCOUNT')
 					UNION
-					SELECT student_uid FROM public.tbl_student JOIN public.tbl_benutzer ON(uid=student_uid) 
-						WHERE aktiv  AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id 
-												AND status_kurzbz in('Student','Diplomand','Incoming') 
-												AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now()-'10 months'::interval)
+					SELECT student_uid FROM public.tbl_student JOIN public.tbl_benutzer ON(uid=student_uid)
+						WHERE aktiv  AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id
+												AND status_kurzbz in('Student','Diplomand','Incoming')
+												AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now())
 												)
-								AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id 
-												AND status_kurzbz='Abbrecher' 
+								AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id
+												AND status_kurzbz='Abbrecher'
 												)
 						AND NOT (uid like 'fhb%' AND length(uid)>10)
 				)";
@@ -290,26 +290,26 @@ $error_msg='';
 		echo $db->db_affected_rows($result).' Eintraege entfernt<br>';
 	else
 		$error_msg.=$db->db_last_error();
-	
+
 	// Personen holen die nicht im Verteiler sind
-	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon) 
-				SELECT uid,UPPER('".$mlist."'),now(),'mlists_generate' 
-				FROM 
+	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon)
+				SELECT uid,UPPER('".$mlist."'),now(),'mlists_generate'
+				FROM
 					(SELECT mitarbeiter_uid as uid FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid) WHERE aktiv
 						AND NOT EXISTS (SELECT 1 FROM public.tbl_benutzergruppe WHERE uid=tbl_benutzer.uid AND gruppe_kurzbz='KEIN_ACCOUNT')
 					UNION
-					SELECT student_uid as uid FROM public.tbl_student JOIN public.tbl_benutzer on(uid=student_uid) 
-						WHERE aktiv AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id 
-												AND status_kurzbz in('Student','Diplomand','Incoming') 
-												AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now()-'10 months'::interval)
+					SELECT student_uid as uid FROM public.tbl_student JOIN public.tbl_benutzer on(uid=student_uid)
+						WHERE aktiv AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id
+												AND status_kurzbz in('Student','Diplomand','Incoming')
+												AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now())
 												)
-							AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id 
-												AND status_kurzbz='Abbrecher' 
+							AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id
+												AND status_kurzbz='Abbrecher'
 												)
 						AND NOT (uid like 'fhb%' AND length(uid)>10)
 					) as a
-				WHERE 
-					uid NOT in(SELECT uid FROM public.tbl_benutzergruppe 
+				WHERE
+					uid NOT in(SELECT uid FROM public.tbl_benutzergruppe
 								WHERE UPPER(gruppe_kurzbz)=UPPER('".$mlist."'))";
 	if($result = $db->db_query($sql_query))
 		echo $db->db_affected_rows($result).' Eintraege hinzugefuegt<br>';
@@ -322,16 +322,16 @@ $error_msg='';
     setGeneriert($mlist);
     echo '<br>'.$mlist.' wird abgeglichen!<br>';
 
-	$sql_query="DELETE FROM public.tbl_benutzergruppe 
-				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")	
-				AND uid not in 
-					(SELECT uid FROM campus.vw_student WHERE 
-					aktiv AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=vw_student.prestudent_id 
-												AND status_kurzbz in('Student','Diplomand','Incoming') 
-												AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now()-'10 months'::interval)
+	$sql_query="DELETE FROM public.tbl_benutzergruppe
+				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")
+				AND uid not in
+					(SELECT uid FROM campus.vw_student WHERE
+					aktiv AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=vw_student.prestudent_id
+												AND status_kurzbz in('Student','Diplomand','Incoming')
+												AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now())
 												)
-							AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=vw_student.prestudent_id 
-												AND status_kurzbz='Abbrecher' 
+							AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=vw_student.prestudent_id
+												AND status_kurzbz='Abbrecher'
 												)
 						AND NOT (uid like 'fhb%' AND length(uid)>10)
 				)";
@@ -339,20 +339,20 @@ $error_msg='';
 		echo $db->db_affected_rows($result).' Eintraege entfernt<br>';
 	else
 		$error_msg.=$db->db_last_error();
-	
+
 	// Studenten holen die nicht im Verteiler sind
-	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon) 
-				SELECT uid,UPPER('".$mlist."'),now(),'mlists_generate' 
-				FROM campus.vw_student 
-				WHERE aktiv AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=vw_student.prestudent_id 
-												AND status_kurzbz in('Student','Diplomand','Incoming') 
-												AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now()-'10 months'::interval)
+	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon)
+				SELECT uid,UPPER('".$mlist."'),now(),'mlists_generate'
+				FROM campus.vw_student
+				WHERE aktiv AND EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=vw_student.prestudent_id
+												AND status_kurzbz in('Student','Diplomand','Incoming')
+												AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now())
 												)
-							AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=vw_student.prestudent_id 
-												AND status_kurzbz='Abbrecher' 
+							AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=vw_student.prestudent_id
+												AND status_kurzbz='Abbrecher'
 												)
 						AND NOT (uid like 'fhb%' AND length(uid)>10)
-				AND uid NOT in(SELECT uid FROM public.tbl_benutzergruppe 
+				AND uid NOT in(SELECT uid FROM public.tbl_benutzergruppe
 								WHERE UPPER(gruppe_kurzbz)=UPPER('".$mlist."'))";
 	if($result = $db->db_query($sql_query))
 		echo $db->db_affected_rows($result).' Eintraege hinzugefuegt<br>';
@@ -365,12 +365,12 @@ $error_msg='';
     setGeneriert($mlist);
     echo '<br>'.$mlist.' wird abgeglichen!<br>';
 
-	$sql_query="DELETE FROM public.tbl_benutzergruppe 
-				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")	
-				AND uid not in 
+	$sql_query="DELETE FROM public.tbl_benutzergruppe
+				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")
+				AND uid not in
 					(
-						SELECT mitarbeiter_uid 
-						FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid) 
+						SELECT mitarbeiter_uid
+						FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid)
 						WHERE aktiv AND lektor
 						AND NOT EXISTS (SELECT 1 FROM public.tbl_benutzergruppe WHERE uid=tbl_benutzer.uid AND gruppe_kurzbz='KEIN_ACCOUNT')
 				)";
@@ -378,14 +378,14 @@ $error_msg='';
 		echo $db->db_affected_rows($result).' Eintraege entfernt<br>';
 	else
 		$error_msg.=$db->db_last_error();
-	
+
 	// lektoren holen die nicht im Verteiler sind
-	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon) 
-				SELECT mitarbeiter_uid,UPPER('".$mlist."'),now(),'mlists_generate' 
-				FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid) 
+	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon)
+				SELECT mitarbeiter_uid,UPPER('".$mlist."'),now(),'mlists_generate'
+				FROM public.tbl_mitarbeiter JOIN public.tbl_benutzer ON(uid=mitarbeiter_uid)
 				WHERE aktiv AND lektor
 				AND NOT EXISTS (SELECT 1 FROM public.tbl_benutzergruppe WHERE uid=tbl_benutzer.uid AND gruppe_kurzbz='KEIN_ACCOUNT')
-				AND mitarbeiter_uid NOT in(SELECT uid FROM public.tbl_benutzergruppe 
+				AND mitarbeiter_uid NOT in(SELECT uid FROM public.tbl_benutzergruppe
 								WHERE UPPER(gruppe_kurzbz)=UPPER('".$mlist."'))";
 	if($result = $db->db_query($sql_query))
 		echo $db->db_affected_rows($result).' Eintraege hinzugefuegt<br>';
@@ -398,29 +398,29 @@ $error_msg='';
     setGeneriert($mlist);
     echo '<br>'.$mlist.' wird abgeglichen!<br>';
 
-	$sql_query="DELETE FROM public.tbl_benutzergruppe 
-				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")	
-				AND uid not in 
-					(SELECT 
-						student_uid 
-					FROM 
-						public.tbl_student 
-					WHERE EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id AND status_kurzbz='Absolvent')			
+	$sql_query="DELETE FROM public.tbl_benutzergruppe
+				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")
+				AND uid not in
+					(SELECT
+						student_uid
+					FROM
+						public.tbl_student
+					WHERE EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id AND status_kurzbz='Absolvent')
 					AND ((uid like 'fhb%' AND length(uid)<10) OR (uid not like 'fhb%'))
 				)";
 	if($result = $db->db_query($sql_query))
 		echo $db->db_affected_rows($result).' Eintraege entfernt<br>';
 	else
 		$error_msg.=$db->db_last_error();
-	
+
 	// Absolventen holen die nicht im Verteiler sind
-	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon) 
-				SELECT student_uid,UPPER('".$mlist."'),now(),'mlists_generate' 
-				FROM 
-					public.tbl_student 
+	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon)
+				SELECT student_uid,UPPER('".$mlist."'),now(),'mlists_generate'
+				FROM
+					public.tbl_student
 				WHERE EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id AND status_kurzbz='Absolvent')
 				AND ((student_uid like 'fhb%' AND length(student_uid)<10) OR (student_uid not like 'fhb%'))
-				AND student_uid NOT in(SELECT uid FROM public.tbl_benutzergruppe 
+				AND student_uid NOT in(SELECT uid FROM public.tbl_benutzergruppe
 								WHERE UPPER(gruppe_kurzbz)=UPPER('".$mlist."'))";
 
 	if($result = $db->db_query($sql_query))
