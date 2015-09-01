@@ -10,6 +10,8 @@
 <h1>FH BFI Wien</h1>
 <html>
 <body>
-	<a href="ressourcenliste.php">Ressourcenliste</a>
+	<a href="ressourcenliste.php">Ressourcenliste</a><br>
+    <a href="stockwerksauslastung.php">Stockwerksauslastung</a>
+
 </body>
 </html>

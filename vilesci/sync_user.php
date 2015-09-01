@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  *
- * Authors: Andreas Oesterreicher <andreas.oesterreicher@technikum-wien.at> 
+ * Authors: Andreas Oesterreicher <andreas.oesterreicher@technikum-wien.at>
  *
  */
 /**
@@ -59,7 +59,7 @@ if(isset($_GET['uid']))
 else
 	$uid='';
 
-$qry = "SELECT  
+$qry = "SELECT
 			vorname, nachname, uid, gebdatum, (SELECT matrikelnr FROM public.tbl_student WHERE student_uid=tbl_benutzer.uid) as matrikelnr, alias,
 			(SELECT lektor FROM public.tbl_mitarbeiter WHERE mitarbeiter_uid=tbl_benutzer.uid) as lektor,
 			(SELECT fixangestellt FROM public.tbl_mitarbeiter WHERE mitarbeiter_uid=tbl_benutzer.uid) as fixangestellt,
@@ -72,12 +72,12 @@ $qry = "SELECT
 		WHERE
 			tbl_benutzer.aktiv
 		AND uid NOT IN('administrator','_DummyLektor')
-		AND 
+		AND
 			(EXISTS (SELECT 1 FROM public.tbl_mitarbeiter WHERE mitarbeiter_uid=tbl_benutzer.uid AND NOT fixangestellt
 				AND NOT EXISTS(SELECT 1 FROM public.tbl_benutzergruppe WHERE uid=tbl_mitarbeiter.mitarbeiter_uid AND gruppe_kurzbz='KEIN_ACCOUNT'))
 			OR
-			EXISTS (SELECT 1 FROM public.tbl_student JOIN public.tbl_prestudentstatus USING(prestudent_id) 
-					WHERE tbl_student.student_uid=tbl_benutzer.uid AND get_rolle_prestudent(prestudent_id,null) in('Student','Incoming') AND tbl_prestudentstatus.studiensemester_kurzbz in(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester where start>now())
+			EXISTS (SELECT 1 FROM public.tbl_student JOIN public.tbl_prestudentstatus USING(prestudent_id)
+					WHERE tbl_student.student_uid=tbl_benutzer.uid AND get_rolle_prestudent(prestudent_id,null) in('Student','Incoming') AND tbl_prestudentstatus.studiensemester_kurzbz in(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester where ende>now())
 					)
 			)
 		AND length(uid)<10";
@@ -105,7 +105,7 @@ if($result = $db->db_query($qry))
 				//Studierende
 				$dn = 'CN='.$cn.',OU=Lehre,OU=Benutzer,DC=fh-vie,DC=ac,DC=at';
 			}
-			
+
 			//Active Directory will das Passwort in doppelten Hochkomma und UTF16LE codiert
 			$utf16_passwort = 	mb_convert_encoding('"'.ACCOUNT_ACTIVATION_PASSWORD.'"', "UTF-16LE", "UTF-8");
 
@@ -119,15 +119,15 @@ if($result = $db->db_query($qry))
 			$data['mail'] = $row->uid.'@'.DOMAIN;
 			$data['sAMAccountName'] = $row->uid;
 			$data['userPrincipalName'] = $row->uid.'@'.DOMAIN;
-		
+
 			$data['profilePath'] = '\\\\file.fh-vie.ac.at\\p.schule$\\allgemein';
-		
+
 			if($row->gebdatum=='')
 			{
 				echo "<br>Ueberspringe $row->nachname $row->vorname weil kein Geburtsdatum eingetragen ist";
 				continue;
 			}
-	
+
 			$data['birthdate'] = $datum_obj->formatDatum($row->gebdatum,'d.m.Y');
 /*
 			if($row->uid==$row->alias)
@@ -149,18 +149,18 @@ if($result = $db->db_query($qry))
 				$data['department'] = $row->studiengang;
 				$data['description'] = 'Studenten '.$row->studiengang;
 			}
-				
-			
+
+
 			//Passwort und UserAccountControl kann nicht beim Anlegen direkt gesetzt werden
 			//Es muss nach dem Anlegen des Users gesetzt werden
-			
+
 			// UserAccountControl gibt den Status des Accounts an. Per default sind diese deaktiviert (514)
 			// 512 = Normal Account
 			// http://support.microsoft.com/kb/305144/en-us
-			//$data["UserAccountControl"] = "512";  
-			//$data["unicodepwd"] = $utf16_passwort;			
+			//$data["UserAccountControl"] = "512";
+			//$data["unicodepwd"] = $utf16_passwort;
 //echo "<br>$cn";
-			
+
 			if(!$ldap->Add($dn, $data))
 			{
 				echo "<br>Fehler beim Anlegen von $row->uid: ".$ldap->errormsg;
@@ -185,10 +185,10 @@ if($result = $db->db_query($qry))
 				{
 					echo "<br>Fehler beim Setzten von UserAccountControl und Passwort von $row->uid: ".$ldap->errormsg;
 					continue;
-				}					
+				}
 
 				echo "<br>$row->uid erfolgreich angelegt";
-				
+
 				/*
 				$to = $row->email_privat;
 				$from = 'no-reply@'.DOMAIN;
