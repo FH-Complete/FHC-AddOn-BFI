@@ -54,7 +54,9 @@ function generateUID($stgkzl,$jahr, $stgtyp, $matrikelnummer)
 
 /**
  * Gerneriert die Mitarbeiter UID
- * Format v.nachname max 20 Zeichen
+ * Format 
+ * Fixangestellte: vorname.nachname max 20 Zeichen
+ * Freie Lektoren: fhb+JAHR+lfdNummer
  */
 function generateMitarbeiterUID($vorname, $nachname, $lektor, $fixangestellt=true)
 {
@@ -67,7 +69,7 @@ function generateMitarbeiterUID($vorname, $nachname, $lektor, $fixangestellt=tru
 		// Nachname wird so lange verkuerzt bis eine eindeutige UID entsteht die noch nicht vergeben ist
 		for($nn=mb_strlen($nachname);$nn!=0;$nn--)
 		{
-			$uid .= mb_substr($vorname.'.'.mb_substr($nachname,0,$nn),0,20);
+			$uid = mb_substr($vorname.'.'.mb_substr($nachname,0,$nn),0,20);
 
 			$uid = mb_str_replace(' ','',$uid);
 			$uid = mb_str_replace('-','',$uid);
