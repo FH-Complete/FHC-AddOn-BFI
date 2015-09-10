@@ -114,7 +114,7 @@ if(isset($_GET['von']) && isset($_GET['bis']))
 			(
 				SELECT distinct datum, stunde, stockwerk, lehreinheit_id
 				FROM lehre.tbl_stundenplan JOIN public.tbl_ort USING(ort_kurzbz)
-				WHERE datum>=".$db->db_add_param($von)." AND datum<=".$db->db_add_param($bis)." AND stockwerk is not null
+				WHERE datum>=".$db->db_add_param($von)." AND datum<=".$db->db_add_param($bis)." AND stockwerk is not null AND standort_id=3
 			) a
 		) b
 	WHERE stockwerk in(1,2,3)
