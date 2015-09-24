@@ -126,44 +126,31 @@ xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn
           </table:table-cell>
         </table:table-row>
 
-		<xsl:apply-templates select="lehreinheit"/>
+		<xsl:apply-templates select="item"/>
 
       </table:table>
 
 </xsl:template>
 
-<xsl:template match="lehreinheit">
+<xsl:template match="item">
         <table:table-row>
           <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
-            <text:p text:style-name="P5"><xsl:value-of select="./stunde[1]/item/stunde_beginn"/></text:p>
+            <text:p text:style-name="P5"><xsl:value-of select="stunde_beginn"/></text:p>
           </table:table-cell>
           <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
-            <text:p text:style-name="P5"><xsl:value-of select="./stunde[last()]/item/stunde_ende"/></text:p>
+            <text:p text:style-name="P5"><xsl:value-of select="stunde_ende"/></text:p>
           </table:table-cell>
           <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
-            <text:p text:style-name="P6"><xsl:value-of select="./stunde[1]/item/ort_kurzbz"/></text:p>
+            <text:p text:style-name="P6"><xsl:value-of select="ort_kurzbz"/></text:p>
           </table:table-cell>
           <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
-            <text:p text:style-name="P5"><xsl:value-of select="./stunde[1]/item[1]/lvbezeichnung"/></text:p>
-			<text:p text:style-name="P5">Studiengang: <xsl:value-of select="./stunde[1]/item[1]/studiengang_kurzbzlang"/></text:p>
+            <text:p text:style-name="P5"><xsl:value-of select="lvbezeichnung"/></text:p>
+			<text:p text:style-name="P5">Studiengang: <xsl:value-of select="studiengang_kurzbzlang"/></text:p>
+			<text:p text:style-name="P5"><xsl:value-of select="nachname"/><xsl:text> </xsl:text><xsl:value-of select="vorname"/></text:p>
           </table:table-cell>
           <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
-		
-				<xsl:for-each select="stunde/item/beschreibung[not(.=../../preceding-sibling::*/item/beschreibung)]">
-					<xsl:if test="string(.)">
-						<text:p text:style-name="P6">
-						 <xsl:value-of select="."/>
-						</text:p>
-					</xsl:if>
-				</xsl:for-each>
-				<xsl:for-each select="stunde/item/anmerkung[not(.=../../preceding-sibling::*/item/anmerkung)]">
-					<xsl:if test="string(.)">
-						<text:p text:style-name="P5">
-						 <xsl:value-of select="."/>
-						</text:p>
-					</xsl:if>
-				</xsl:for-each>
-
+			<xsl:apply-templates select="beschreibungen"/>
+			<xsl:apply-templates select="anmerkungen"/>
           </table:table-cell>
           <table:table-cell table:style-name="Tabelle1.A2" office:value-type="string">
             <text:p text:style-name="P4"/>
@@ -191,4 +178,17 @@ xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn
           </table:table-cell>
         </table:table-row>
 </xsl:template>
+
+<xsl:template match="beschreibungen">
+	<text:p text:style-name="P5">
+		 <xsl:value-of select="beschreibung"/>
+	</text:p>
+</xsl:template>
+
+<xsl:template match="anmerkungen">
+	<text:p text:style-name="P5">
+		 <xsl:value-of select="anmerkung"/>
+	</text:p>
+</xsl:template>
+
 </xsl:stylesheet>
