@@ -180,8 +180,12 @@ xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn
 </xsl:template>
 
 <xsl:template match="beschreibungen">
+	<xsl:apply-templates select="beschreibung"/>
+</xsl:template>
+
+<xsl:template match="beschreibung">
 	<text:p text:style-name="P5">
-		 <xsl:value-of select="beschreibung"/>
+		 <xsl:value-of select="."/>
 	</text:p>
 </xsl:template>
 
