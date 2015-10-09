@@ -50,23 +50,23 @@ else
 	<link rel="stylesheet" href="../../../skin/vilesci.css" type="text/css">
 	<link rel="stylesheet" href="../../../skin/tablesort.css" type="text/css">
 	<link rel="stylesheet" href="../../../skin/jquery-ui-1.9.2.custom.min.css" type="text/css">
-	<script type="text/javascript" src="../../../include/js/jquery1.9.min.js"></script> 
-	
+	<script type="text/javascript" src="../../../include/js/jquery1.9.min.js"></script>
+
 	<script type="text/javascript">
-	$(document).ready(function() 
-	{ 
+	$(document).ready(function()
+	{
 	    $(".datepicker").datepicker($.datepicker.regional['de']);
 
-		$(document).ready(function() 
-			{ 
+		$(document).ready(function()
+			{
 				$("#t1").tablesorter(
 				{
 					sortList: [[0,0]],
 					widgets: ["zebra"]
-				}); 
-			}); 
+				});
+			});
 	});
-		
+
 	</script>
 </head>
 <body>
@@ -104,12 +104,14 @@ if(isset($_GET['von']) && isset($_GET['bis']))
 	$qry="
 	SELECT
 		datum, stunde, sum(teilnehmer) as anzahl
-	FROM 
+	FROM
 		(
 			SELECT
 				datum, stunde, stockwerk,
-				(SELECT count(*) FROM campus.vw_student_lehrveranstaltung
-				WHERE lehreinheit_id=a.lehreinheit_id) as teilnehmer
+				(SELECT count(*) FROM campus.vw_student_lehrveranstaltung WHERE lehreinheit_id=a.lehreinheit_id
+					AND NOT EXISTS(SELECT 1 FROM lehre.tbl_zeugnisnote JOIN lehre.tbl_note USING(note)
+					WHERE tbl_zeugnisnote.student_uid=vw_student_lehrveranstaltung.uid AND lehrveranstaltung_id=vw_student_lehrveranstaltung.lehrveranstaltung_id AND tbl_note.positiv))
+				as teilnehmer
 			FROM
 			(
 				SELECT distinct datum, stunde, stockwerk, lehreinheit_id
