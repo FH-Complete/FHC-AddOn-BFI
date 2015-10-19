@@ -29,6 +29,7 @@ require_once('../../../include/benutzerberechtigung.class.php');
 require_once('../../../include/prestudent.class.php');
 require_once('../../../include/person.class.php');
 require_once('../../../include/adresse.class.php');
+require_once('../../../include/sprache.class.php');
 require_once('../../../include/zgv.class.php');
 require_once('../../../include/studiengang.class.php');
 require_once('../../../include/mitarbeiter.class.php');
