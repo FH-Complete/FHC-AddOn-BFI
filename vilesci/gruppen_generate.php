@@ -428,6 +428,74 @@ $error_msg='';
 	else
 		$error_msg.=$db->db_last_error();
 
+
+	// ******* Outgoing ************
+    flush();
+	$mlist = 'OUTGOING'.$studiensemester;
+	$gruppe = new gruppe();
+	if(!$gruppe->load($mlist))
+	{
+		$gruppe->gruppe_kurzbz=$mlist;
+		$gruppe->studiengang_kz=0;
+		$gruppe->semester=0;
+		$gruppe->bezeichnung='Outgoing '.$studiensemester;
+		$gruppe->beschreibung='Outgoing '.$studiensemester;
+		$gruppe->sichtbar=true;
+		$gruppe->generiert=true;
+		$gruppe->mailgrp=true;
+		$gruppe->lehre=true;
+		$gruppe->aktiv=true;
+		$gruppe->gesperrt=true;
+		$gruppe->new=true;
+		if($gruppe->save())
+		{
+			echo "Gruppe $mlist neu angelegt da nicht vorhanden";
+		}
+		else
+			echo "Failed:".$gruppe->errormsg." (".$mlist.")";
+	}
+	else
+	{
+	    setGeneriert($mlist);
+	}
+    echo '<br>'.$mlist.' wird abgeglichen!<br>';
+
+	$sql_query="DELETE FROM public.tbl_benutzergruppe
+				WHERE UPPER(gruppe_kurzbz)=UPPER(".$db->db_add_param($mlist).")
+				AND uid not in
+					(SELECT
+						student_uid
+					FROM
+						public.tbl_student
+						JOIN bis.tbl_bisio USING(student_uid)
+					WHERE EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id AND status_kurzbz='Student')
+					AND tbl_bisio.bis>=(SELECT start FROM public.tbl_studiensemester WHERE studiensemester_kurzbz=".$db->db_add_param($studiensemester).")
+					AND tbl_bisio.von<=(SELECT ende FROM public.tbl_studiensemester WHERE studiensemester_kurzbz=".$db->db_add_param($studiensemester).")
+					AND ((student_uid like 'fhb%' AND length(student_uid)<10) OR (student_uid not like 'fhb%'))
+				)";
+	if($result = $db->db_query($sql_query))
+		echo $db->db_affected_rows($result).' Eintraege entfernt<br>';
+	else
+		$error_msg.=$db->db_last_error();
+
+	// Absolventen holen die nicht im Verteiler sind
+	$sql_query="INSERT INTO public.tbl_benutzergruppe (uid, gruppe_kurzbz, insertamum, insertvon)
+				SELECT student_uid,UPPER('".$mlist."'),now(),'mlists_generate'
+				FROM
+						public.tbl_student
+						JOIN bis.tbl_bisio USING(student_uid)
+					WHERE EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id AND status_kurzbz='Student')
+					AND tbl_bisio.bis>=(SELECT start FROM public.tbl_studiensemester WHERE studiensemester_kurzbz=".$db->db_add_param($studiensemester).")
+					AND tbl_bisio.von<=(SELECT ende FROM public.tbl_studiensemester WHERE studiensemester_kurzbz=".$db->db_add_param($studiensemester).")
+					AND ((student_uid like 'fhb%' AND length(student_uid)<10) OR (student_uid not like 'fhb%'))
+				AND student_uid NOT in(SELECT uid FROM public.tbl_benutzergruppe
+								WHERE UPPER(gruppe_kurzbz)=UPPER('".$mlist."'))";
+
+	if($result = $db->db_query($sql_query))
+		echo $db->db_affected_rows($result).' Eintraege hinzugefuegt<br>';
+	else
+		$error_msg.=$db->db_last_error();
+
 	echo $error_msg;
 	?>
 	<BR>
