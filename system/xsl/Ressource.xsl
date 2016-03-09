@@ -193,8 +193,12 @@ xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn
 </xsl:template>
 
 <xsl:template match="anmerkungen">
+	<xsl:apply-templates select="anmerkung"/>
+</xsl:template>
+
+<xsl:template match="anmerkung">
 	<text:p text:style-name="P5">
-		 <xsl:value-of select="anmerkung"/>
+		 <xsl:value-of select="."/>
 	</text:p>
 </xsl:template>
 
