@@ -194,7 +194,7 @@ $error_msg='';
 										AND studiensemester_kurzbz IN(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester WHERE ende>now())
 							)
 						AND NOT EXISTS(SELECT 1 FROM public.tbl_prestudentstatus
-									WHERE prestudent_id=vw_student.prestudent_id 
+									WHERE prestudent_id=vw_student.prestudent_id
 										AND status_kurzbz='Abbrecher'
 							)
 					AND NOT (uid like 'fhb%' AND length(uid)>10)
@@ -467,7 +467,7 @@ $error_msg='';
 						student_uid
 					FROM
 						public.tbl_student
-						JOIN bis.tbl_bisio USING(student_uid)
+						JOIN bis.tbl_bisio USING(prestudent_id)
 					WHERE EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id AND status_kurzbz='Student')
 					AND tbl_bisio.bis>=(SELECT start FROM public.tbl_studiensemester WHERE studiensemester_kurzbz=".$db->db_add_param($studiensemester).")
 					AND tbl_bisio.von<=(SELECT ende FROM public.tbl_studiensemester WHERE studiensemester_kurzbz=".$db->db_add_param($studiensemester).")
@@ -483,7 +483,7 @@ $error_msg='';
 				SELECT student_uid,UPPER('".$mlist."'),now(),'mlists_generate'
 				FROM
 						public.tbl_student
-						JOIN bis.tbl_bisio USING(student_uid)
+						JOIN bis.tbl_bisio USING(prestudent_id)
 					WHERE EXISTS(SELECT 1 FROM public.tbl_prestudentstatus WHERE prestudent_id=tbl_student.prestudent_id AND status_kurzbz='Student')
 					AND tbl_bisio.bis>=(SELECT start FROM public.tbl_studiensemester WHERE studiensemester_kurzbz=".$db->db_add_param($studiensemester).")
 					AND tbl_bisio.von<=(SELECT ende FROM public.tbl_studiensemester WHERE studiensemester_kurzbz=".$db->db_add_param($studiensemester).")
