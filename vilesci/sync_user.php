@@ -60,12 +60,12 @@ else
 	$uid='';
 
 $qry = "SELECT
-			vorname, nachname, uid, gebdatum, (SELECT matrikelnr FROM public.tbl_student WHERE student_uid=tbl_benutzer.uid) as matrikelnr, alias,
+			vorname, nachname, uid, gebdatum, (SELECT perskz FROM public.tbl_prestudent WHERE uid=tbl_benutzer.uid) as perskz, alias,
 			(SELECT lektor FROM public.tbl_mitarbeiter WHERE mitarbeiter_uid=tbl_benutzer.uid) as lektor,
 			(SELECT fixangestellt FROM public.tbl_mitarbeiter WHERE mitarbeiter_uid=tbl_benutzer.uid) as fixangestellt,
-			(SELECT true FROM public.tbl_student WHERE student_uid=tbl_benutzer.uid) as student,
+			(SELECT true FROM public.tbl_prestudent WHERE uid=tbl_benutzer.uid) as student,
 			(SELECT kontakt FROM public.tbl_kontakt WHERE kontakttyp='email' AND person_id=tbl_benutzer.person_id ORDER BY zustellung desc LIMIT 1) as email_privat, aktivierungscode,
-			(SELECT bezeichnung FROM public.tbl_studiengang JOIN public.tbl_student USING(studiengang_kz) WHERE tbl_student.student_uid=tbl_benutzer.uid) as studiengang
+			(SELECT bezeichnung FROM public.tbl_studiengang JOIN public.tbl_prestudent USING(studiengang_kz) WHERE tbl_prestudent.uid=tbl_benutzer.uid) as studiengang
 		FROM
 			public.tbl_benutzer
 			JOIN public.tbl_person USING(person_id)
@@ -76,8 +76,8 @@ $qry = "SELECT
 			(EXISTS (SELECT 1 FROM public.tbl_mitarbeiter WHERE mitarbeiter_uid=tbl_benutzer.uid AND NOT fixangestellt
 				AND NOT EXISTS(SELECT 1 FROM public.tbl_benutzergruppe WHERE uid=tbl_mitarbeiter.mitarbeiter_uid AND gruppe_kurzbz='KEIN_ACCOUNT'))
 			OR
-			EXISTS (SELECT 1 FROM public.tbl_student JOIN public.tbl_prestudentstatus USING(prestudent_id)
-					WHERE tbl_student.student_uid=tbl_benutzer.uid AND get_rolle_prestudent(prestudent_id,null) in('Student','Incoming') AND tbl_prestudentstatus.studiensemester_kurzbz in(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester where ende>now())
+			EXISTS (SELECT 1 FROM public.tbl_prestudent JOIN public.tbl_prestudentstatus USING(prestudent_id)
+					WHERE tbl_prestudent.uid=tbl_benutzer.uid AND get_rolle_prestudent(prestudent_id,null) in('Student','Incoming') AND tbl_prestudentstatus.studiensemester_kurzbz in(SELECT studiensemester_kurzbz FROM public.tbl_studiensemester where ende>now())
 					)
 			)
 		AND length(uid)<10";
@@ -93,7 +93,7 @@ if($result = $db->db_query($qry))
 		//Suchen ob der User bereits vorhanden ist
 		if(!$dn = $ldap->GetUserDN($row->uid))
 		{
-			if($row->matrikelnr=='')
+			if($row->perskz=='')
 			{
 				$cn = $row->nachname.' '.$row->vorname.' ('.$row->uid.')';
 				//Mitarbeiter
