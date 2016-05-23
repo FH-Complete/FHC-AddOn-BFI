@@ -110,7 +110,7 @@ if(isset($_GET['von']) && isset($_GET['bis']))
 				datum, stunde, stockwerk,
 				(SELECT count(*) FROM campus.vw_student_lehrveranstaltung WHERE lehreinheit_id=a.lehreinheit_id
 					AND NOT EXISTS(SELECT 1 FROM lehre.tbl_zeugnisnote JOIN lehre.tbl_note USING(note)
-					WHERE tbl_zeugnisnote.student_uid=vw_student_lehrveranstaltung.uid AND lehrveranstaltung_id=vw_student_lehrveranstaltung.lehrveranstaltung_id AND tbl_note.positiv))
+					WHERE tbl_zeugnisnote.prestudent_id=vw_student_lehrveranstaltung.prestudent_id AND lehrveranstaltung_id=vw_student_lehrveranstaltung.lehrveranstaltung_id AND tbl_note.positiv))
 				as teilnehmer
 			FROM
 			(
