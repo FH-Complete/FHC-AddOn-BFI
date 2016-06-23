@@ -22,10 +22,10 @@
  */
 require_once('../../../config/vilesci.config.inc.php');
 ?>
-addon.push( 
+addon.push(
 {
-	init: function() 
-	{		
+	init: function()
+	{
 		// Menuepunkt fuer Laufzettel hinzufuegen
 		dokumentemenue = document.getElementById("menu-dokumente-popup");
 		var menuseparator = document.createElement("menuseparator");
@@ -35,7 +35,7 @@ addon.push(
 		menuentry.setAttribute("id","addons-bfi-dokumente-laufzettel");
 		menuentry.setAttribute("label","Laufzettel");
 		menuentry.addEventListener("command",AddonBFIDokumenteLaufzettel, true);
-	
+
 		dokumentemenue.appendChild(menuentry);
 	},
 	selectMitarbeiter: function(person_id, mitarbeiter_uid)
@@ -71,25 +71,25 @@ function AddonBFIDokumenteLaufzettel(event)
 	{
   		tree.view.selection.getRangeAt(t,start,end);
 		for (var v = start.value; v <= end.value; v++)
-		{			
+		{
 			var prestudent_id = getTreeCellText(tree, 'student-treecol-prestudent_id', v);
 			paramList += ';'+prestudent_id;
 		}
 	}
-	
+
 	if(paramList.replace(";",'')=='')
 	{
 		alert('Bitte einen Studenten auswaehlen');
 		return false;
 	}
-	
+
 	var output = 'pdf';
 	if(typeof(event)!=='undefined')
 	{
-		if (event.shiftKey) 
+		if (event.shiftKey)
 		{
 		    var output = 'odt';
-		} 
+		}
 		else if (event.ctrlKey)
 		{
 			var output = 'doc';
@@ -99,7 +99,7 @@ function AddonBFIDokumenteLaufzettel(event)
 			var output = 'pdf';
 		}
 	}
-	
+
 	//PDF erzeugen
 	window.open('<?php echo APP_ROOT; ?>content/pdfExport.php?xml=laufzettel.xml.php&xsl=Laufzettel&prestudent_id='+paramList+'&output='+output,'Laufzettel', 'height=200,width=350,left=0,top=0,hotkeys=0,resizable=yes,status=no,scrollbars=yes,toolbar=no,location=no,menubar=no,dependent=yes');
 }

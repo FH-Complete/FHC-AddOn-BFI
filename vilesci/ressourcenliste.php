@@ -36,14 +36,14 @@ if(!$rechte->isBerechtigt('lehre/lvplan'))
 	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 	<link rel="stylesheet" href="../../../skin/vilesci.css" type="text/css">
 	<link rel="stylesheet" href="../../../skin/jquery-ui-1.9.2.custom.min.css" type="text/css">
-	<script type="text/javascript" src="../../../include/js/jquery1.9.min.js"></script> 
-	
+	<script type="text/javascript" src="../../../include/js/jquery1.9.min.js"></script>
+
 	<script type="text/javascript">
-	$(document).ready(function() 
-	{ 
+	$(document).ready(function()
+	{
 	    $(".datepicker").datepicker($.datepicker.regional['de']).datepicker("setDate", new Date());
 	});
-		
+
 	</script>
 </head>
 <body>
@@ -53,7 +53,7 @@ if(!$rechte->isBerechtigt('lehre/lvplan'))
 		<input type="hidden" name="output" value="pdf" />
 		<input type="hidden" name="xmlformat" value="xml" />
 		<input type="hidden" name="xml" value="stundenplan_betriebsmittel.rdf.php" />
-		
+
 		<table>
 		<tbody>
 			<tr>
