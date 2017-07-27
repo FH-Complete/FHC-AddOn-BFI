@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /* Copyright (C) 2014 fhcomplete.org
  *
  * This program is free software; you can redistribute it and/or modify
@@ -128,6 +128,7 @@ function change_password($passwort_alt, $passwort_neu, $uid)
 	$ldif.="unicodePwd:: $newpw64\n";
 	$ldif.="-\n";
 
+	setlocale(LC_CTYPE, "de_AT.UTF-8");
 
 	// ldapmodify auf der Commandline ausfuehren
 	$cmd = sprintf("/usr/bin/ldapmodify -H %s -D %s -x -w %s", escapeshellarg(LDAP_SERVER_MASTER), escapeshellarg($user_dn), escapeshellarg($passwort_alt));
