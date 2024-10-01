@@ -30,6 +30,8 @@
 		'name'=>$p->t('lehre/termineImLvPlan'),
 		'icon'=>'../../../skin/images/button_lvplan.png',
 		'link'=>'../../../cis/private/lvplan/stpl_week.php?type=lva&lva='.$lvid,
+		'c4_icon'=>APP_ROOT.'skin/images/button_lvplan.png',
+		'c4_link'=>APP_ROOT.'cis/private/lvplan/stpl_week.php?type=lva&lva='.$lvid,
 		'text'=>''
 	);
 }
