@@ -27,7 +27,8 @@
 	(
 		'id'=>'addon_bfi_menu_lvplan_lva',
 		'position'=>'121',
-		'name'=>$p->t('lehre/termineImLvPlan'),
+		'name'=> $p->t('lehre/termineImLvPlan'),
+		'phrase' => 'lehre/termineImLvPlan',
 		'icon'=>'../../../skin/images/button_lvplan.png',
 		'link'=>'../../../cis/private/lvplan/stpl_week.php?type=lva&lva='.$lvid,
 		'c4_icon'=>APP_ROOT.'skin/images/button_lvplan.png',
